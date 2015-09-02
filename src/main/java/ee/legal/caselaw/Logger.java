@@ -55,13 +55,17 @@ public class Logger {
     }
 
     private static String parseMessage(String messagePattern, Object[] args) {
+        Integer lineNumber = Thread.currentThread().getStackTrace()[3].getLineNumber();
+        String fileName = Thread.currentThread().getStackTrace()[3].getFileName();
         String message = MessageFormatter.arrayFormat(messagePattern, args).getMessage();
         String context = getContext();
         context = context != null ? context : "";
-        return MessageFormatter.format("[{}] {}", context, message).getMessage();
+        Object[] messageArgs = new Object[]{fileName, lineNumber, context, message};
+        return MessageFormatter.arrayFormat("{}:{}: [{}] {}", messageArgs).getMessage();
     }
 
     private static long getTime() {
         return System.currentTimeMillis();
     }
+
 }
