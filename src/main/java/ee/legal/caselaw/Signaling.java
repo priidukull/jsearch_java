@@ -44,6 +44,11 @@ public class Signaling {
                 deque.append(signal);
             }
         }
+        clear();
+    }
+
+    private void clear() {
+        signals = new HashMap<String, Map<String, Map<String, Object>>>();
     }
 
     public void enqueue(HashMap<String, Object> task) throws IOException {
