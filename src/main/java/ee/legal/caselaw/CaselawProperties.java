@@ -22,7 +22,7 @@ public class CaselawProperties {
         prop.setProperty("cwd", System.getProperty("user.dir"));
 
         Map<String, String> env = System.getenv();
-        Integer redisDb = env.containsKey("ENVIRONMENT") && env.get("ENVIRONMENT").equals("jsearch_test") ? 0 : 1;
+        Integer redisDb = env.containsKey("ENVIRONMENT") && env.get("ENVIRONMENT").equals("jsearch") ? 0 : 1;
         prop.setProperty("redisDb", String.valueOf(redisDb));
     }
 
