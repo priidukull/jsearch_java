@@ -24,7 +24,7 @@ public class ReadTextExtract {
         final String fileName = (String) event.get("file");
         final String parsedText;
         try {
-            parsedText = pdftoText(fileName);
+            parsedText = parseText(fileName);
         } catch (FileNotFoundException e) {
             Logger.warning("File {} was not found", fileName);
             return;
@@ -39,12 +39,17 @@ public class ReadTextExtract {
         signaling.enqueue(task);
     }
 
+    private String parseText(String fileName) throws IOException {
+        String parsedText = pdftoText(fileName);
+        return parsedText.replaceAll("\\u0000", "");
+    }
+
     /* Code by Santosh Thottingal
      * http://thottingal.in/blog/2009/06/24/pdfbox-extract-text-from-pdf/
      * */
     private static String pdftoText(String fileName) throws IOException {
         PDFParser parser;
-        String parsedText = null;;
+        String parsedText = null;
         PDFTextStripper pdfStripper = null;
         PDDocument pdDoc = null;
         COSDocument cosDoc = null;

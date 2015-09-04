@@ -47,11 +47,6 @@ public class TestRead extends TestCase {
      */
     @Before
     public void setUp() {
-        event = new HashMap<String, Object>() {{
-            put("ref_id", 1);
-            put("drink", true);
-            put("file", prop.getProperty("cwd") + "/src/test/java/files/1.pdf");
-        }};
         read = new ReadTextExtract();
         signaling = Signaling.getInstance();
     }
@@ -68,7 +63,38 @@ public class TestRead extends TestCase {
     }
 
     @org.junit.Test
-    public void testprocess() throws IOException {
+    public void testProcess() throws IOException {
+        event = new HashMap<String, Object>() {{
+            put("ref_id", 1);
+            put("drink", true);
+            put("file", prop.getProperty("cwd") + "/src/test/java/files/1.pdf");
+        }};
+
+        read.process(event);
+
+        Collection<Map<String, Object>> tasks = signaling.getSignals().get("read.text.insert").values();
+        Map<String, Object> task = tasks.iterator().next();
+        String val = (String) task.get("val");
+        Integer refId = (Integer) task.get("ref_id");
+        String action = (String) task.get("action");
+        Boolean drink = (Boolean) task.get("drink");
+        String file = (String) task.get("file");
+
+        assertTrue(val.contains("Viru Maakohus"));
+        assertEquals(event.get("ref_id"), refId);
+        assertEquals("read.text.insert", action);
+        assertTrue(drink);
+        assertEquals(event.get("file"), file);
+    }
+
+    @org.junit.Test
+    public void testProcessWhenStringContainsNulls() throws IOException {
+        event = new HashMap<String, Object>() {{
+            put("ref_id", 2);
+            put("drink", true);
+            put("file", prop.getProperty("cwd") + "/src/test/java/files/2.pdf");
+        }};
+
         read.process(event);
 
         Collection<Map<String, Object>> tasks = signaling.getSignals().get("read.text.insert").values();
