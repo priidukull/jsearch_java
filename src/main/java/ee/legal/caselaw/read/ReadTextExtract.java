@@ -17,14 +17,21 @@ import java.util.Map;
 
 public class ReadTextExtract {
     Signaling signaling = Signaling.getInstance();
+    Integer refId;
+    Boolean drink;
+
+    String PDF_MARKED_AS_SECURED = "incorrect header check";
 
     public void process(Map event) throws IOException {
-        final Integer refId = (Integer) event.get("ref_id");
-        final Boolean drink = (Boolean) event.get("drink");
+        this.refId = (Integer) event.get("ref_id");
+        this.drink = (Boolean) event.get("drink");
         final String fileName = (String) event.get("file");
         final String parsedText;
         try {
             parsedText = parseText(fileName);
+            if (parsedText.equals(PDF_MARKED_AS_SECURED)) {
+                return;
+            };
         } catch (FileNotFoundException e) {
             Logger.warning("File {} was not found", fileName);
             return;
@@ -47,7 +54,7 @@ public class ReadTextExtract {
     /* Code by Santosh Thottingal
      * http://thottingal.in/blog/2009/06/24/pdfbox-extract-text-from-pdf/
      * */
-    private static String pdftoText(String fileName) throws IOException {
+    private String pdftoText(String fileName) throws IOException {
         PDFParser parser;
         String parsedText = null;
         PDFTextStripper pdfStripper = null;
@@ -60,7 +67,17 @@ public class ReadTextExtract {
             cosDoc = parser.getDocument();
             pdfStripper = new PDFTextStripper();
             pdDoc = new PDDocument(cosDoc);
-            parsedText = pdfStripper.getText(pdDoc);
+            try {
+                parsedText = pdfStripper.getText(pdDoc);
+            } catch (IOException e) {
+                if (e.getCause().getMessage().equals(PDF_MARKED_AS_SECURED)) {
+                    enqueueFailure(fileName);
+                    Logger.warning("The PDF file appears to be marked as SECURED. Could not extract text from it. Will enqueue a task into read.text.extract.failed");
+                    return PDF_MARKED_AS_SECURED;
+                } else {
+                    throw e;
+                }
+            }
         } finally {
             try {
                 if (cosDoc != null)
@@ -72,5 +89,15 @@ public class ReadTextExtract {
             }
         }
         return parsedText;
+    }
+
+    private void enqueueFailure(final String fileName) throws IOException {
+        HashMap<String, Object > task = new HashMap<String, Object >(){{
+            put("ref_id", refId);
+            put("drink", drink);
+            put("action", "read.text.extract.failed");
+            put("file", fileName);
+        }};
+        signaling.enqueue(task);
     }
 }
