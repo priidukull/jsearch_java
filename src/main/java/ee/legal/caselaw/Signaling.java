@@ -47,7 +47,7 @@ public class Signaling {
         clear();
     }
 
-    private void clear() {
+    public void clear() {
         signals = new HashMap<String, Map<String, Map<String, Object>>>();
     }
 

@@ -59,7 +59,7 @@ public class TestRead extends TestCase {
     public void tearDown() {
         event = null;
         read = null;
-        signaling = null;
+        signaling.clear();
     }
 
     @org.junit.Test
@@ -113,11 +113,34 @@ public class TestRead extends TestCase {
     }
 
     @org.junit.Test
-    public void testProcessWhenPdfIsSecured() throws IOException {
+    public void testProcessWhenPdfMarkedAsSecured() throws IOException {
         event = new HashMap<String, Object>() {{
             put("ref_id", 3);
             put("drink", true);
             put("file", prop.getProperty("cwd") + "/src/test/java/files/3.pdf");
+        }};
+
+        read.process(event);
+
+        Collection<Map<String, Object>> tasks = signaling.getSignals().get("read.text.extract.failed").values();
+        Map<String, Object> task = tasks.iterator().next();
+        Integer refId = (Integer) task.get("ref_id");
+        String action = (String) task.get("action");
+        Boolean drink = (Boolean) task.get("drink");
+        String file = (String) task.get("file");
+
+        assertEquals(event.get("ref_id"), refId);
+        assertEquals("read.text.extract.failed", action);
+        assertTrue(drink);
+        assertEquals(event.get("file"), file);
+    }
+
+    @org.junit.Test
+    public void testProcessWhenUnknownCompressionMethod() throws IOException {
+        event = new HashMap<String, Object>() {{
+            put("ref_id", 4);
+            put("drink", true);
+            put("file", prop.getProperty("cwd") + "/src/test/java/files/4.pdf");
         }};
 
         read.process(event);

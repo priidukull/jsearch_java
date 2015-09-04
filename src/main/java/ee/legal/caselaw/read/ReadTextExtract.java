@@ -21,6 +21,7 @@ public class ReadTextExtract {
     Boolean drink;
 
     String PDF_MARKED_AS_SECURED = "incorrect header check";
+    String UNKNOWN_COMPRESSION_METHOD = "unknown compression method";
 
     public void process(Map event) throws IOException {
         this.refId = (Integer) event.get("ref_id");
@@ -29,7 +30,7 @@ public class ReadTextExtract {
         final String parsedText;
         try {
             parsedText = parseText(fileName);
-            if (parsedText.equals(PDF_MARKED_AS_SECURED)) {
+            if (parsedText.equals(PDF_MARKED_AS_SECURED) || parsedText.equals(UNKNOWN_COMPRESSION_METHOD)) {
                 return;
             };
         } catch (FileNotFoundException e) {
@@ -74,6 +75,10 @@ public class ReadTextExtract {
                     enqueueFailure(fileName);
                     Logger.warning("The PDF file appears to be marked as SECURED. Could not extract text from it. Will enqueue a task into read.text.extract.failed");
                     return PDF_MARKED_AS_SECURED;
+                } else if (e.getCause().getMessage().equals(UNKNOWN_COMPRESSION_METHOD)) {
+                    enqueueFailure(fileName);
+                    Logger.warning("The PDF file appears to have an unknown compression method. Could not extract text from it. Will enqueue a task into read.text.extract.failed");
+                    return UNKNOWN_COMPRESSION_METHOD;
                 } else {
                     throw e;
                 }
